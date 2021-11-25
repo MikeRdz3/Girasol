@@ -1,0 +1,95 @@
+#include <Servo.h>
+#include <LiquidCrystal.h>
+
+Servo horizontal; // horizontal servo
+int servoh = 90;
+Servo vertical; // vertical servo 
+int servov = 90;
+int ldrlt = 0; //LDR left top 
+int ldrrt = 1; //LDR rigth top 
+int ldrld = 2; //LDR left down 
+int ldrrd = 3; //LDR rigth down 
+
+float vin, vout;
+LiquidCrystal lcd(12,11,5,4,3,2);
+void setup()
+
+{
+  pinMode(A0,INPUT);
+  lcd.begin(16, 2);
+  horizontal.attach(10); 
+  vertical.attach(9);
+  Serial.begin(1000);
+}
+
+void loop() 
+{
+  lcd.clear();
+  lcd.begin(16, 2);
+  lcd.home();
+  lcd.setCursor(1,0);
+  lcd.print("Modo diablo");
+  
+  int lt = analogRead(ldrlt); // left top 
+  int rt = analogRead(ldrrt); // right top 
+  int ld = analogRead(ldrld); // left down 
+  int rd = analogRead(ldrrd); // rigtt down 
+
+  int dtime = analogRead(4)/20;
+  int tol = analogRead(5)/4;
+  
+  int avt = (lt + rt) / 2; // average value top
+  int avd = (ld + rd) / 2; // average value down
+  int avr = (rt + rd) / 2; // average value right
+  int avl = (lt + ld) / 2; // average value left
+  
+  int dvert = avt - avd; // diffirence of up and down
+  int dhoriz = avl - avr;// diffirence of right and left
+
+if (-1*tol > dvert || dvert > tol) // check if the diffirence is in the tolerance else change vertical angle
+{
+  if (avt > avd)
+  {
+  servov = ++servov;
+    if (servov > 180)
+    {
+    servov = 180;
+    }
+  }
+  else if (avt < avd)
+  {
+  servov= --servov;
+    if (servov < 0)
+    {
+    servov = 0;
+    }
+  }
+vertical.write(servov);
+}
+
+if (-1*tol > dhoriz || dhoriz > tol) // check if the diffirence is in the tolerance else change horizontal angle
+{
+  if (avl > avr)
+  {
+  servoh = --servoh;
+    if (servoh < 0)
+    {
+    servoh = 0;
+    }
+  }
+  else if (avl < avr)
+  {
+  servoh = ++servoh;
+    if (servoh > 180)
+    {
+    servoh = 180;
+    }
+  }
+  else if (avl == avr)
+  {
+  // nothing
+  }
+  horizontal.write(servoh);
+}
+delay(dtime);  
+} 
